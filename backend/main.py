@@ -1,17 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from sqlalchemy.orm import Session 
+from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
+from pydantic import BaseModel
+from typing import Optional
 import database
-
 from models import User
 from schemas import UserCreate, UserResponse
 
 database.Base.metadata.create_all(bind=database.engine)
-
 app = FastAPI()
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
@@ -20,10 +19,9 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173"],   # allow all for testing
+    allow_origins=["http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,13 +34,52 @@ def get_db():
     finally:
         db.close()
 
+# Login request schema
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+# Login response schema
+class LoginResponse(BaseModel):
+    success: bool
+    message: str
+    user: Optional[UserResponse] = None
+
 @app.get("/")
 def read_root(db: Session = Depends(get_db)):
     return {"message": "Hello from FastAPI + Postgres!"}
 
-@app.post("/login")
-def login():
-    return {"success": True, "message": "Login OK"}
+@app.post("/login", response_model=LoginResponse)
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    # Find user by email
+    user = db.query(User).filter(User.email == login_data.email).first()
+    
+    if not user:
+        return LoginResponse(
+            success=False,
+            message="Invalid email or password"
+        )
+    
+    # Verify password
+    if not verify_password(login_data.password, user.hashed_password):
+        return LoginResponse(
+            success=False,
+            message="Invalid email or password"
+        )
+    
+    # Check if user is active
+    if not user.is_active:
+        return LoginResponse(
+            success=False,
+            message="Account is disabled"
+        )
+    
+    # Login successful
+    return LoginResponse(
+        success=True,
+        message="Login successful",
+        user=user
+    )
 
 @app.get("/db-check")
 def db_check(db: Session = Depends(get_db)):
@@ -59,7 +96,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(
         (User.username == user.username) | (User.email == user.email)
     ).first()
-    
+   
     if existing_user:
         if existing_user.username == user.username:
             raise HTTPException(
@@ -71,7 +108,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-    
+   
     # Create new user
     hashed_password = hash_password(user.password)
     db_user = User(
@@ -79,11 +116,11 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         email=user.email,
         hashed_password=hashed_password
     )
-    
+   
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
+   
     return db_user
 
 @app.get("/users/{user_id}", response_model=UserResponse)
