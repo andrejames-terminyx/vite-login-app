@@ -16,6 +16,7 @@ const App = () => {
   const [errors, setErrors] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const validateEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -73,10 +74,10 @@ const App = () => {
       return;
     }
 
-      if (isLogin) {
-      // 🔹 Send login request to FastAPI
+    if (isLogin) {
+      // 🔹 Login logic - for now using the simple endpoint
       try {
-        const response = await fetch("http://localhost:8000/login", {
+        const response = await fetch("http://127.0.0.1:8000/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -88,22 +89,66 @@ const App = () => {
         const data = await response.json();
 
         if (data.success) {
+          // Set current user from the response data
+          setCurrentUser(data.user);
           setIsLoggedIn(true);
         } else {
-          setErrors({ email: data.message });
+          setErrors({ email: data.message || "Login failed" });
         }
       } catch (err) {
         console.error("Error logging in:", err);
         setErrors({ email: "Server error, try again later" });
       }
     } else {
-      // signup logic (we’ll connect this to backend next)
-      alert("Signup clicked! We'll connect this soon.");
+      // 🔹 Signup logic - connect to FastAPI /users endpoint
+      try {
+        const response = await fetch("http://127.0.0.1:8000/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: formData.name,
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Registration successful
+          alert("Account created successfully! You can now log in.");
+          
+          // Switch to login mode and clear form
+          setIsLogin(true);
+          setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+          setErrors({});
+          
+          // Update users list
+          setUsers(prev => [...prev, data]);
+        } else {
+          // Handle registration errors
+          if (data.detail) {
+            if (data.detail.includes("Username")) {
+              setErrors({ name: data.detail });
+            } else if (data.detail.includes("Email")) {
+              setErrors({ email: data.detail });
+            } else {
+              setErrors({ email: data.detail });
+            }
+          } else {
+            setErrors({ email: "Registration failed. Please try again." });
+          }
+        }
+      } catch (err) {
+        console.error("Error signing up:", err);
+        setErrors({ email: "Server error, try again later" });
+      }
     }
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setCurrentUser(null);
     setFormData({ name: '', email: '', password: '', confirmPassword: '' });
   };
 
@@ -112,8 +157,6 @@ const App = () => {
     setFormData({ name: '', email: '', password: '', confirmPassword: '' });
     setErrors({});
   };
-
-  const currentUser = users.find(u => u.email === formData.email);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

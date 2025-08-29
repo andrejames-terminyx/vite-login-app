@@ -17,3 +17,12 @@ class UserResponse(UserBase):
     
     class Config:
         from_attributes = True
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginResponse(BaseModel):
+    success: bool
+    message: str
+    user: Optional[UserResponse] = None
