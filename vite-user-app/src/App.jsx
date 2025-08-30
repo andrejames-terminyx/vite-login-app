@@ -158,8 +158,40 @@ const App = () => {
     setErrors({});
   };
 
+  // If logged in, render dashboard without the card container
+  if (isLoggedIn && currentUser) {
+    return (
+      <div>
+      <Body 
+        isLogin={isLogin}
+        isLoggedIn={isLoggedIn}
+        formData={formData}
+        errors={errors}
+        showPassword={showPassword}
+        showConfirmPassword={showConfirmPassword}
+        currentUser={currentUser}
+        onInputChange={handleInputChange}
+        onTogglePassword={() => setShowPassword(!showPassword)}
+        onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+        onSubmit={handleSubmit}
+        onLogout={handleLogout}
+      />
+      
+      {/* Footer with padding */}
+      <div className="px-8 pb-8">
+        <Footer 
+          isLogin={isLogin}
+          isLoggedIn={isLoggedIn}
+          onToggleMode={toggleMode}
+        />
+      </div>
+    </div>
+    );
+  }
+
+  // If not logged in, render login/signup form with card container
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen w-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         {/* Header Section */}
         <Header 
