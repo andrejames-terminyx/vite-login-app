@@ -1,13 +1,24 @@
 import React from 'react';
+import { GithubLogoIcon } from 'lucide-react';
 
 const Footer = ({ isLogin, isLoggedIn, onToggleMode }) => {
   // Don't show the toggle when logged in
   if (isLoggedIn) {
     return (
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
-          Enjoying your experience? We're glad you're here! 🎉
-        </p>
+      <div className="mt-6">
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-500">
+            ©2025 "COMPANY NAME"
+          </p>
+            <a
+            href="https://github.com/terminyx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-500 hover:text-gray-700 transition duration-200"
+          >
+            <GitHubLogoIcon size={24} />
+          </a>
+        </div>
       </div>
     );
   }
