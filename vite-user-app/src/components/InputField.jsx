@@ -1,13 +1,13 @@
 import React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-const InputField = ({ 
-  type, 
-  name, 
-  placeholder, 
-  value, 
-  onChange, 
-  error, 
+const InputField = ({
+  type,
+  name,
+  placeholder,
+  value,
+  onChange,
+  error,
   icon: Icon,
   showPasswordToggle,
   showPassword,

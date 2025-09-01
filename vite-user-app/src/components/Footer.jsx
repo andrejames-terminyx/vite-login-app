@@ -1,5 +1,5 @@
 import React from 'react';
-import { GithubLogoIcon } from 'lucide-react';
+import { siGithub } from 'simple-icons';
 
 const Footer = ({ isLogin, isLoggedIn, onToggleMode }) => {
   // Don't show the toggle when logged in
@@ -16,7 +16,9 @@ const Footer = ({ isLogin, isLoggedIn, onToggleMode }) => {
             rel="noopener noreferrer"
             className="text-gray-500 hover:text-gray-700 transition duration-200"
           >
-            <GitHubLogoIcon size={24} />
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d={siGithub.path} />
+            </svg>
           </a>
         </div>
       </div>
