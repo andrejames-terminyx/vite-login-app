@@ -6,6 +6,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing import Optional
 import database
+from database import get_db
 from models import User
 from schemas import UserCreate, UserResponse
 
@@ -26,13 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Login request schema
 class LoginRequest(BaseModel):
